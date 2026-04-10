@@ -1,0 +1,11 @@
+{
+  "name": "core-pulse-surface",
+  "private": true,
+  "workspaces": [
+    "synergy-dashboard"
+  ],
+  "scripts": {
+    "dev:dashboard": "npm --workspace synergy-dashboard run dev",
+    "build:dashboard": "npm --workspace synergy-dashboard run build"
+  }
+}

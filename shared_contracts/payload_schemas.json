@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "schemas": {
+    "telemetry_raw": {
+      "type": "object",
+      "required": [
+        "timestamp",
+        "sequence",
+        "sensor_id",
+        "team",
+        "employees",
+        "system_load",
+        "flags"
+      ],
+      "properties": {
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sensor_id": {
+          "type": "string"
+        },
+        "team": {
+          "type": "string"
+        },
+        "employees": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": [
+              "user_id",
+              "display_name",
+              "focus_score",
+              "burnout_risk",
+              "activity_load",
+              "context_switches",
+              "keystroke_entropy",
+              "active_window",
+              "distractions"
+            ],
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "display_name": {
+                "type": "string"
+              },
+              "focus_score": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "burnout_risk": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "activity_load": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "context_switches": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "keystroke_entropy": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "active_window": {
+                "type": "string"
+              },
+              "flow_minutes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "distractions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "system_load": {
+          "type": "object",
+          "required": [
+            "cpu",
+            "memory",
+            "network_mbps"
+          ],
+          "properties": {
+            "cpu": {
+              "type": "number"
+            },
+            "memory": {
+              "type": "number"
+            },
+            "network_mbps": {
+              "type": "number"
+            }
+          }
+        },
+        "flags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "dashboard_live": {
+      "type": "object",
+      "required": [
+        "type",
+        "timestamp",
+        "sequence",
+        "headline",
+        "employees",
+        "synergy_matrix",
+        "system_load",
+        "trend",
+        "alerts"
+      ],
+      "properties": {
+        "type": {
+          "const": "dashboard_frame"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "headline": {
+          "type": "object",
+          "required": [
+            "team_productivity",
+            "burnout_pressure",
+            "context_switch_pressure",
+            "employees_online",
+            "risk_band"
+          ],
+          "properties": {
+            "team_productivity": {
+              "type": "number"
+            },
+            "burnout_pressure": {
+              "type": "number"
+            },
+            "context_switch_pressure": {
+              "type": "number"
+            },
+            "employees_online": {
+              "type": "integer"
+            },
+            "risk_band": {
+              "type": "string"
+            }
+          }
+        },
+        "employees": {
+          "type": "array"
+        },
+        "synergy_matrix": {
+          "type": "object"
+        },
+        "system_load": {
+          "type": "object"
+        },
+        "trend": {
+          "type": "object"
+        },
+        "alerts": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

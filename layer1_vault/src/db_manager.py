@@ -261,6 +261,39 @@ class VaultDatabase:
         ).fetchall()
         return list(rows)
 
+    def fetch_integrity_audit_rows(self, limit: int = 5) -> list[sqlite3.Row]:
+        rows = self.connection.execute(
+            """
+            SELECT
+                telemetry.id,
+                telemetry.ingested_at,
+                telemetry.sequence,
+                telemetry.sensor_id,
+                telemetry.team,
+                telemetry.employee_count,
+                telemetry.avg_focus_score,
+                telemetry.avg_burnout_risk,
+                telemetry.key_fingerprint,
+                telemetry.entropy_digest,
+                telemetry.entropy_quality,
+                telemetry.payload_sha256,
+                telemetry.integrity_proof,
+                telemetry.proof_payload_json,
+                telemetry.aad_json,
+                telemetry.nonce,
+                telemetry.ciphertext,
+                weather.payload_digest AS space_weather_digest,
+                weather.quality AS space_weather_quality
+            FROM encrypted_telemetry AS telemetry
+            INNER JOIN space_weather_samples AS weather
+                ON weather.id = telemetry.space_weather_sample_id
+            ORDER BY telemetry.id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        return list(rows)
+
     def fetch_recent_space_weather_samples(self, limit: int = 5) -> list[sqlite3.Row]:
         rows = self.connection.execute(
             """

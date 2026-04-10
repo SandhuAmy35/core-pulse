@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
+from typing import Any
 
 try:
     from .crypto_aes import EncryptedPayload
@@ -23,14 +24,14 @@ class VaultProof:
     proof_payload_json: str
 
 
-def build_vault_proof(
+def build_proof_payload(
     *,
     encrypted: EncryptedPayload,
     entropy: EntropyMaterial,
     snapshot: SpaceWeatherSnapshot,
     telemetry_summary: TelemetrySummary,
-) -> VaultProof:
-    proof_payload = {
+) -> dict[str, Any]:
+    return {
         "algorithm": encrypted.algorithm,
         "key_fingerprint": encrypted.key_fingerprint,
         "entropy_digest": encrypted.entropy_digest,
@@ -49,8 +50,31 @@ def build_vault_proof(
         "ciphertext_sha256": hashlib.sha256(encrypted.ciphertext).hexdigest(),
         "aad_sha256": hashlib.sha256(encrypted.aad_json.encode("utf-8")).hexdigest(),
     }
+
+
+def calculate_integrity_proof(proof_payload_json: str) -> str:
+    return hashlib.sha256(proof_payload_json.encode("utf-8")).hexdigest()
+
+
+def verify_integrity_proof(proof_payload_json: str, integrity_proof: str) -> bool:
+    return calculate_integrity_proof(proof_payload_json) == integrity_proof
+
+
+def build_vault_proof(
+    *,
+    encrypted: EncryptedPayload,
+    entropy: EntropyMaterial,
+    snapshot: SpaceWeatherSnapshot,
+    telemetry_summary: TelemetrySummary,
+) -> VaultProof:
+    proof_payload = build_proof_payload(
+        encrypted=encrypted,
+        entropy=entropy,
+        snapshot=snapshot,
+        telemetry_summary=telemetry_summary,
+    )
     proof_payload_json = json.dumps(proof_payload, sort_keys=True, separators=(",", ":"))
-    integrity_proof = hashlib.sha256(proof_payload_json.encode("utf-8")).hexdigest()
+    integrity_proof = calculate_integrity_proof(proof_payload_json)
     return VaultProof(
         integrity_proof=integrity_proof,
         proof_fingerprint=integrity_proof[:16],
