@@ -23,9 +23,10 @@ def wait_for_exit(process: subprocess.Popen[str], timeout_seconds: float) -> Non
 def main() -> int:
     repo_root = Path(__file__).resolve().parents[2]
     database_path = repo_root / "layer1_vault" / "data" / "vault_test_check.db"
+    entropy_journal_path = repo_root / "layer1_vault" / "data" / "vault_test_check_entropy.wal"
     daemon_log = repo_root / "layer1_vault" / "data" / "vault_test_daemon.log"
 
-    for path in (database_path, daemon_log):
+    for path in (database_path, entropy_journal_path, daemon_log):
         if path.exists():
             path.unlink()
 
@@ -36,6 +37,8 @@ def main() -> int:
         "3",
         "--database-path",
         str(database_path),
+        "--entropy-journal-path",
+        str(entropy_journal_path),
         "--api-cache-ttl",
         "60",
         "--log-level",
@@ -102,6 +105,9 @@ def main() -> int:
         "sequence_max": encrypted_row[2],
         "proof_rows": proof_row[0],
         "space_weather_rows": weather_row[0],
+        "entropy_journal_path": str(entropy_journal_path),
+        "entropy_journal_exists": entropy_journal_path.exists(),
+        "entropy_journal_size": entropy_journal_path.stat().st_size if entropy_journal_path.exists() else 0,
         "daemon_log": str(daemon_log),
     }
     print(json.dumps(summary, indent=2))
@@ -112,6 +118,8 @@ def main() -> int:
         raise SystemExit("expected at least one integrity proof row")
     if weather_row[0] < 1:
         raise SystemExit("expected at least one space weather row")
+    if not entropy_journal_path.exists() or entropy_journal_path.stat().st_size == 0:
+        raise SystemExit("expected non-empty entropy journal WAL")
     return 0
 
 

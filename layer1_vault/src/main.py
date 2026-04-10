@@ -32,6 +32,7 @@ class VaultConfig:
     zmq_endpoint: str
     zmq_topic: str
     database_path: str
+    entropy_journal_path: str | None
     max_messages: int | None
     primary_endpoint: str
     flare_endpoint: str
@@ -50,7 +51,8 @@ class CosmicVaultDaemon:
             timeout_seconds=config.api_timeout,
             cache_ttl_seconds=config.api_cache_ttl,
         )
-        self.entropy_engine = EntropyEngine()
+        default_journal_path = str(Path(config.database_path).with_name("entropy.wal"))
+        self.entropy_engine = EntropyEngine(journal_path=config.entropy_journal_path or default_journal_path)
         self._context = zmq.Context.instance()
 
     @staticmethod
@@ -72,6 +74,7 @@ class CosmicVaultDaemon:
         socket.setsockopt_string(zmq.SUBSCRIBE, self.config.zmq_topic)
         LOGGER.info("layer1 subscribed to %s on %s", self.config.zmq_topic, self.config.zmq_endpoint)
         LOGGER.info("space-weather endpoints: %s | %s", self.config.primary_endpoint, self.config.flare_endpoint)
+        LOGGER.info("entropy journal: %s", self.config.entropy_journal_path or Path(self.config.database_path).with_name("entropy.wal"))
         processed = 0
 
         try:
@@ -134,6 +137,7 @@ def parse_args() -> argparse.Namespace:
         "--database-path",
         default=str(Path(__file__).resolve().parents[1] / "data" / "vault.db"),
     )
+    parser.add_argument("--entropy-journal-path", default=None)
     parser.add_argument("--max-messages", type=int, default=None)
     parser.add_argument("--primary-endpoint", default=SWPC_PRIMARY_XRAY_URL)
     parser.add_argument("--flare-endpoint", default=NASA_DONKI_FLR_URL)
@@ -153,6 +157,7 @@ def main() -> int:
         zmq_endpoint=args.zmq_endpoint,
         zmq_topic=args.zmq_topic,
         database_path=args.database_path,
+        entropy_journal_path=args.entropy_journal_path,
         max_messages=args.max_messages,
         primary_endpoint=args.primary_endpoint,
         flare_endpoint=args.flare_endpoint,
