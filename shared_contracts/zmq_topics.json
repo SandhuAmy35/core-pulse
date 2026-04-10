@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "topics": {
+    "telemetry_raw": {
+      "transport": "zeromq-pubsub",
+      "publisher": "layer0_sentinel",
+      "consumers": [
+        "layer1_vault",
+        "layer2_neural"
+      ],
+      "socket_pattern": "PUB -> SUB",
+      "framing": [
+        "topic",
+        "json_payload"
+      ],
+      "default_endpoint": "tcp://127.0.0.1:5557"
+    },
+    "dashboard_live": {
+      "transport": "websocket",
+      "publisher": "layer2_neural",
+      "consumers": [
+        "layer4_surface"
+      ],
+      "socket_pattern": "broadcast",
+      "default_endpoint": "ws://127.0.0.1:8765"
+    }
+  }
+}

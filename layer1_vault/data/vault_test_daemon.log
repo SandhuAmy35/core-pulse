@@ -1,0 +1,5 @@
+2026-04-10 21:56:33,350 | INFO | layer1 subscribed to telemetry_raw on tcp://127.0.0.1:5557
+2026-04-10 21:56:33,350 | INFO | space-weather endpoints: https://services.swpc.noaa.gov/json/goes/primary/xrays-1-day.json | https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR
+2026-04-10 21:56:37,442 | INFO | stored record=1 seq=2 key=a26e352e5171cc88 proof=b595b340f360020f xray=3.290e-07 quality=live
+2026-04-10 21:56:37,445 | INFO | stored record=2 seq=3 key=251f036b32c5fa07 proof=a546320618a4d899 xray=3.290e-07 quality=live
+2026-04-10 21:56:37,945 | INFO | stored record=3 seq=4 key=c66f5eb3ad45a8b1 proof=a473e23243839469 xray=3.290e-07 quality=live
