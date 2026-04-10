@@ -43,6 +43,8 @@ def encrypt_payload(
         "sensor_id": payload.get("sensor_id"),
         "team": payload.get("team"),
         "entropy_digest": entropy.entropy_digest,
+        "entropy_quality_tier": entropy.entropy_quality_tier,
+        "entropy_policy_version": entropy.policy_version,
         "space_weather_quality": entropy.space_weather_quality,
     }
     aad_json = json.dumps(aad, sort_keys=True, separators=(",", ":"))

@@ -48,7 +48,8 @@ def _audit_recent_rows(rows: list[Any]) -> tuple[dict[str, Any], list[dict[str, 
             if proof_payload.get(field_name) != expected_value:
                 issues.append(f"{field_name}_mismatch")
 
-        if proof_payload.get("space_weather_quality") != row["entropy_quality"]:
+        proof_entropy_quality = proof_payload.get("entropy_quality_tier", proof_payload.get("space_weather_quality"))
+        if proof_entropy_quality != row["entropy_quality"]:
             issues.append("entropy_quality_mismatch")
 
         audit_results.append(
@@ -61,6 +62,7 @@ def _audit_recent_rows(rows: list[Any]) -> tuple[dict[str, Any], list[dict[str, 
                 "issues": issues,
                 "proof_fingerprint": str(row["integrity_proof"])[:16],
                 "space_weather_quality": row["space_weather_quality"],
+                "entropy_quality_tier": row["entropy_quality"],
             }
         )
 

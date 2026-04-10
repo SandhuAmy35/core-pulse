@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -74,9 +75,13 @@ class VaultPipelineTests(unittest.TestCase):
         recovered = decrypt_payload(encrypted, entropy.key_bytes)
         self.assertEqual(recovered["sequence"], payload["sequence"])
         self.assertEqual(recovered["sensor_id"], payload["sensor_id"])
+        self.assertEqual(entropy.entropy_quality_tier, "BRONZE")
         self.assertEqual(len(proof.integrity_proof), 64)
         self.assertTrue(verify_integrity_proof(proof.proof_payload_json, proof.integrity_proof))
         self.assertFalse(verify_integrity_proof(proof.proof_payload_json, "0" * 64))
+        proof_payload = json.loads(proof.proof_payload_json)
+        self.assertEqual(proof_payload["entropy_quality_tier"], "BRONZE")
+        self.assertEqual(proof_payload["entropy_policy_version"], "v1")
 
     def test_database_persistence(self) -> None:
         payload = {
@@ -115,31 +120,36 @@ class VaultPipelineTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             db_path = Path(temp_dir) / "vault.db"
             db = VaultDatabase(db_path)
-            db.initialize()
-            snapshot_id = db.upsert_space_weather_snapshot(fake_snapshot())
-            row_id = db.insert_encrypted_telemetry(
-                topic="telemetry_raw",
-                payload=payload,
-                telemetry_summary=telemetry_summary,
-                encrypted=encrypted,
-                entropy=entropy,
-                proof=proof,
-                space_weather_sample_id=snapshot_id,
-            )
-            self.assertGreater(row_id, 0)
-            rows = db.fetch_recent_records(limit=1)
-            self.assertEqual(len(rows), 1)
-            self.assertEqual(rows[0]["sequence"], 11)
-            self.assertEqual(rows[0]["employee_count"], 1)
-            proofs = db.fetch_recent_proofs(limit=1)
-            self.assertEqual(proofs[0]["integrity_proof"], proof.integrity_proof)
-            report = build_report(str(db_path), recent_limit=2, verify_integrity=True)
-            self.assertEqual(report["summary"]["encrypted_record_count"], 1)
-            self.assertEqual(len(report["recent_records"]), 1)
-            self.assertEqual(report["integrity_audit"]["records_checked"], 1)
-            self.assertEqual(report["integrity_audit"]["failed_count"], 0)
-            self.assertTrue(report["recent_audits"][0]["passed"])
-            db.close()
+            try:
+                db.initialize()
+                snapshot_id = db.upsert_space_weather_snapshot(fake_snapshot())
+                row_id = db.insert_encrypted_telemetry(
+                    topic="telemetry_raw",
+                    payload=payload,
+                    telemetry_summary=telemetry_summary,
+                    encrypted=encrypted,
+                    entropy=entropy,
+                    proof=proof,
+                    space_weather_sample_id=snapshot_id,
+                )
+                self.assertGreater(row_id, 0)
+                rows = db.fetch_recent_records(limit=1)
+                self.assertEqual(len(rows), 1)
+                self.assertEqual(rows[0]["sequence"], 11)
+                self.assertEqual(rows[0]["employee_count"], 1)
+                audit_rows = db.fetch_integrity_audit_rows(limit=1)
+                self.assertEqual(audit_rows[0]["entropy_quality"], "BRONZE")
+                proofs = db.fetch_recent_proofs(limit=1)
+                self.assertEqual(proofs[0]["integrity_proof"], proof.integrity_proof)
+                report = build_report(str(db_path), recent_limit=2, verify_integrity=True)
+                self.assertEqual(report["summary"]["encrypted_record_count"], 1)
+                self.assertEqual(len(report["recent_records"]), 1)
+                self.assertEqual(report["integrity_audit"]["records_checked"], 1)
+                self.assertEqual(report["integrity_audit"]["failed_count"], 0)
+                self.assertTrue(report["recent_audits"][0]["passed"])
+                self.assertEqual(report["recent_audits"][0]["entropy_quality_tier"], "BRONZE")
+            finally:
+                db.close()
 
 
 if __name__ == "__main__":

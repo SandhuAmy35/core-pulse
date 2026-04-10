@@ -206,7 +206,7 @@ class VaultDatabase:
                 encrypted.algorithm,
                 encrypted.key_fingerprint,
                 encrypted.entropy_digest,
-                entropy.space_weather_quality,
+                entropy.entropy_quality_tier,
                 encrypted.plaintext_sha256,
                 proof.integrity_proof,
                 proof.proof_payload_json,
