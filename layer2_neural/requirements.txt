@@ -1,0 +1,7 @@
+langgraph>=0.0.26
+langchain-community>=0.0.29
+langchain-core>=0.1.40
+pydantic>=2.6.4
+pyzmq>=25.1.2
+pysqlite3>=0.5.2
+cryptography>=42.0.5
