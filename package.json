@@ -1,0 +1,10 @@
+{
+  "name": "core-pulse",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix layer4_surface run dev:dashboard",
+    "build": "npm --prefix layer4_surface run build:dashboard",
+    "dev:dashboard": "npm --prefix layer4_surface run dev:dashboard",
+    "build:dashboard": "npm --prefix layer4_surface run build:dashboard"
+  }
+}
