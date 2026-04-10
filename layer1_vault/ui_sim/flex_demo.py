@@ -29,9 +29,14 @@ def format_years(seconds: float) -> str:
     return f"{years:,.3e} years"
 
 
-def simulate_attack(rounds: int, guesses_per_round: int, refresh_delay: float) -> None:
+def simulate_attack(
+    rounds: int,
+    guesses_per_round: int,
+    refresh_delay: float,
+    entropy_journal_path: str | None = None,
+) -> None:
     client = SpaceWeatherClient(cache_ttl_seconds=1.0)
-    entropy_engine = EntropyEngine()
+    entropy_engine = EntropyEngine(journal_path=entropy_journal_path)
     rng = random.Random(42)
     success = 0
 
@@ -92,6 +97,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rounds", type=int, default=5)
     parser.add_argument("--guesses-per-round", type=int, default=2500)
     parser.add_argument("--refresh-delay", type=float, default=0.5)
+    parser.add_argument("--entropy-journal-path", default=None)
     return parser.parse_args()
 
 
@@ -101,6 +107,7 @@ def main() -> int:
         rounds=args.rounds,
         guesses_per_round=args.guesses_per_round,
         refresh_delay=args.refresh_delay,
+        entropy_journal_path=args.entropy_journal_path,
     )
     return 0
 

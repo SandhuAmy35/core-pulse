@@ -7,6 +7,11 @@ import sys
 import time
 from pathlib import Path
 
+try:
+    from .runtime_env import build_subprocess_env, test_artifact_root
+except ImportError:
+    from runtime_env import build_subprocess_env, test_artifact_root
+
 
 def wait_for_exit(process: subprocess.Popen[str], timeout_seconds: float) -> None:
     deadline = time.time() + timeout_seconds
@@ -22,9 +27,11 @@ def wait_for_exit(process: subprocess.Popen[str], timeout_seconds: float) -> Non
 
 def main() -> int:
     repo_root = Path(__file__).resolve().parents[2]
-    database_path = repo_root / "layer1_vault" / "data" / "vault_test_check.db"
-    entropy_journal_path = repo_root / "layer1_vault" / "data" / "vault_test_check_entropy.wal"
-    daemon_log = repo_root / "layer1_vault" / "data" / "vault_test_daemon.log"
+    test_env = build_subprocess_env(repo_root)
+    artifact_root = test_artifact_root(repo_root)
+    database_path = artifact_root / "vault_test_check.db"
+    entropy_journal_path = artifact_root / "vault_test_check_entropy.wal"
+    daemon_log = artifact_root / "vault_test_daemon.log"
 
     for path in (database_path, entropy_journal_path, daemon_log):
         if path.exists():
@@ -57,13 +64,19 @@ def main() -> int:
         daemon = subprocess.Popen(
             daemon_command,
             cwd=repo_root,
+            env=test_env,
             stdout=daemon_output,
             stderr=subprocess.STDOUT,
             text=True,
         )
         try:
             time.sleep(2.0)
-            publisher = subprocess.run(publisher_command, cwd=repo_root, check=True)
+            publisher = subprocess.run(
+                publisher_command,
+                cwd=repo_root,
+                env=test_env,
+                check=True,
+            )
             _ = publisher
             wait_for_exit(daemon, timeout_seconds=30.0)
         finally:

@@ -1,17 +1,35 @@
 from __future__ import annotations
 
 import json
-import tempfile
+import shutil
 import unittest
+import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 from layer1_vault.src.entropy_journal import EntropyJournal
 
 
+def _temp_root() -> Path:
+    root = Path(__file__).resolve().parents[1] / "data" / "test_artifacts"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+@contextmanager
+def _temp_dir(prefix: str) -> Path:
+    path = _temp_root() / f"{prefix}{uuid.uuid4().hex}"
+    path.mkdir(parents=True, exist_ok=False)
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
+
+
 class EntropyJournalTests(unittest.TestCase):
     def test_append_and_recover_round_trip(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            journal_path = Path(temp_dir) / "entropy.wal"
+        with _temp_dir("entropy-journal-") as temp_dir:
+            journal_path = temp_dir / "entropy.wal"
             key_material = b"layer1-journal-test-key-0000000000"
             journal = EntropyJournal(journal_path, key_material=key_material)
             first = journal.append_seed(b"a" * 32, request_hash="req-1")
@@ -27,8 +45,8 @@ class EntropyJournalTests(unittest.TestCase):
             self.assertFalse(recovered.state.tail_truncated)
 
     def test_partial_tail_is_truncated_on_recovery(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            journal_path = Path(temp_dir) / "entropy.wal"
+        with _temp_dir("entropy-journal-") as temp_dir:
+            journal_path = temp_dir / "entropy.wal"
             key_material = b"layer1-journal-test-key-0000000000"
             journal = EntropyJournal(journal_path, key_material=key_material)
             entry = journal.append_seed(b"c" * 32, request_hash="req-3")
@@ -43,8 +61,8 @@ class EntropyJournalTests(unittest.TestCase):
             self.assertTrue(recovered.state.tail_truncated)
 
     def test_invalid_mac_record_is_dropped(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            journal_path = Path(temp_dir) / "entropy.wal"
+        with _temp_dir("entropy-journal-") as temp_dir:
+            journal_path = temp_dir / "entropy.wal"
             key_material = b"layer1-journal-test-key-0000000000"
             journal = EntropyJournal(journal_path, key_material=key_material)
             first = journal.append_seed(b"d" * 32, request_hash="req-4")

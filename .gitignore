@@ -7,3 +7,7 @@ __pycache__/
 *.sqlite
 *.db
 .env
+layer1_vault/data/tmp_tests/
+layer1_vault/data/test_artifacts/
+layer1_vault/data/entropy.wal
+layer1_vault/data/vault_test_check_entropy.wal
