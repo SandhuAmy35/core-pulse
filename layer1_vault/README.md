@@ -37,6 +37,9 @@ python layer1_vault/ui_sim/flex_demo.py --rounds 3 --guesses-per-round 2500
 ## Validate Layer 1
 
 ```powershell
+python layer1_vault/tests/check_all.py
+
+# or run each check individually
 python layer1_vault/tests/check_unit.py
 python layer1_vault/tests/check_live_pipeline.py
 python layer1_vault/tests/check_report.py

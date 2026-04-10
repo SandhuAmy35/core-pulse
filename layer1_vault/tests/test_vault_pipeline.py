@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
-import tempfile
+import shutil
 import unittest
+import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 from layer1_vault.src.crypto_aes import decrypt_payload, encrypt_payload
@@ -12,6 +14,22 @@ from layer1_vault.src.payload_validator import TelemetryValidationError, validat
 from layer1_vault.src.proof_engine import build_vault_proof, verify_integrity_proof
 from layer1_vault.src.trng_engine import EntropyEngine
 from layer1_vault.src.vault_report import build_report
+
+
+def _temp_root() -> Path:
+    root = Path(__file__).resolve().parents[1] / "data" / "test_artifacts"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
+@contextmanager
+def _temp_dir(prefix: str) -> Path:
+    path = _temp_root() / f"{prefix}{uuid.uuid4().hex}"
+    path.mkdir(parents=True, exist_ok=False)
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
 
 
 def fake_snapshot() -> SpaceWeatherSnapshot:
@@ -63,8 +81,8 @@ class VaultPipelineTests(unittest.TestCase):
             "flags": ["test"],
         }
         telemetry_summary = validate_telemetry_payload(payload)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            journal_path = Path(temp_dir) / "entropy.wal"
+        with _temp_dir("vault-pipeline-") as temp_dir:
+            journal_path = temp_dir / "entropy.wal"
             engine = EntropyEngine(
                 machine_salt=b"layer1-test-salt-000000000000000",
                 journal_path=journal_path,
@@ -116,9 +134,9 @@ class VaultPipelineTests(unittest.TestCase):
             "flags": ["test"],
         }
         telemetry_summary = validate_telemetry_payload(payload)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            db_path = Path(temp_dir) / "vault.db"
-            journal_path = Path(temp_dir) / "entropy.wal"
+        with _temp_dir("vault-pipeline-") as temp_dir:
+            db_path = temp_dir / "vault.db"
+            journal_path = temp_dir / "entropy.wal"
             engine = EntropyEngine(
                 machine_salt=b"layer1-test-salt-000000000000000",
                 journal_path=journal_path,
@@ -191,8 +209,8 @@ class VaultPipelineTests(unittest.TestCase):
             "system_load": {"cpu": 41.0, "memory": 52.0, "network_mbps": 7.0},
             "flags": ["test"],
         }
-        with tempfile.TemporaryDirectory() as temp_dir:
-            journal_path = Path(temp_dir) / "entropy_resume.wal"
+        with _temp_dir("vault-pipeline-") as temp_dir:
+            journal_path = temp_dir / "entropy_resume.wal"
             seed = b"layer1-test-salt-000000000000000"
             first_engine = EntropyEngine(machine_salt=seed, journal_path=journal_path)
             first_entropy = first_engine.build_entropy_material(fake_snapshot(), payload)
