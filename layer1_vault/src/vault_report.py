@@ -34,6 +34,9 @@ def _audit_recent_rows(rows: list[Any]) -> tuple[dict[str, Any], list[dict[str, 
             "payload_sha256": row["payload_sha256"],
             "space_weather_digest": row["space_weather_digest"],
             "space_weather_quality": row["space_weather_quality"],
+            "entropy_journal_sequence": row["entropy_journal_seq"],
+            "entropy_journal_entry_hash": row["entropy_journal_entry_hash"],
+            "entropy_journal_merkle_root": row["entropy_journal_root"],
             "sequence": row["sequence"],
             "sensor_id": row["sensor_id"],
             "team": row["team"],
@@ -63,6 +66,8 @@ def _audit_recent_rows(rows: list[Any]) -> tuple[dict[str, Any], list[dict[str, 
                 "proof_fingerprint": str(row["integrity_proof"])[:16],
                 "space_weather_quality": row["space_weather_quality"],
                 "entropy_quality_tier": row["entropy_quality"],
+                "entropy_journal_sequence": row["entropy_journal_seq"],
+                "entropy_journal_merkle_root": row["entropy_journal_root"],
             }
         )
 

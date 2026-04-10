@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 try:
+    from .entropy_journal import EntropyJournal
     from .entropy_policy import DEFAULT_ENTROPY_POLICY, LOCAL_CSPRNG_PROVIDER, NASA_DONKI_PROVIDER, EntropyPolicy
     from .entropy_providers import (
         ContextDigestProvider,
@@ -30,6 +31,7 @@ try:
     )
     from .nasa_client import SpaceWeatherSnapshot, iso_utc
 except ImportError:
+    from entropy_journal import EntropyJournal
     from entropy_policy import DEFAULT_ENTROPY_POLICY, LOCAL_CSPRNG_PROVIDER, NASA_DONKI_PROVIDER, EntropyPolicy
     from entropy_providers import (
         ContextDigestProvider,
@@ -72,6 +74,11 @@ class EntropyMaterial:
     entropy_sources: list[dict[str, Any]]
     fallback_reason: str
     supplemental_entropy_count: int
+    journal_sequence: int
+    journal_entry_hash: str
+    journal_merkle_root: str
+    journal_recovered_entries: int
+    journal_tail_truncated: bool
     evidence: dict[str, Any]
 
 
@@ -83,6 +90,8 @@ class EntropyEngine:
         policy: EntropyPolicy = DEFAULT_ENTROPY_POLICY,
         supplemental_providers: list[EntropyProvider] | None = None,
         context_provider: ContextDigestProvider | None = None,
+        journal_path: str | Path | None = None,
+        journal: EntropyJournal | None = None,
     ) -> None:
         self.policy = policy
         self._machine_salt = machine_salt or self._require_local_csprng(32, purpose="machine_salt")
@@ -91,10 +100,23 @@ class EntropyEngine:
             RandomOrgClient(timeout_seconds=policy.remote_timeout_seconds),
         ]
         self._context_provider = context_provider or NasaDonkiDigestClient()
+        default_journal_path = Path(__file__).resolve().parents[1] / "data" / "entropy.wal"
+        self._journal = journal or EntropyJournal(
+            journal_path=Path(journal_path) if journal_path is not None else default_journal_path,
+            key_material=self._machine_salt,
+        )
         self._circuit_breakers: dict[str, CircuitBreakerState] = {
             provider.name: CircuitBreakerState() for provider in self._supplemental_providers
         }
         self._circuit_breakers.setdefault(self._context_provider.name, CircuitBreakerState())
+        if self._journal.state.recovered_entries:
+            LOGGER.info(
+                "entropy journal recovered entries=%s last_sequence=%s merkle_root=%s tail_truncated=%s",
+                self._journal.state.recovered_entries,
+                self._journal.state.last_sequence,
+                self._journal.state.merkle_root[:16],
+                self._journal.state.tail_truncated,
+            )
 
     def build_entropy_material(
         self,
@@ -114,15 +136,76 @@ class EntropyEngine:
         supplemental_samples, supplemental_records, fallback_reasons = self._collect_supplemental_entropy()
 
         supplemental_entropy = b"".join(sample.entropy_bytes for sample in supplemental_samples)
-        entropy_sources = [context_record, *supplemental_records]
         entropy_quality_tier = self.policy.classify_quality_tier(len(supplemental_samples))
         fallback_reason = ",".join(fallback_reasons)
+        recovered_seed = self._journal.state.last_seed or self._machine_salt
+
+        epoch_seed_input = b"|".join(
+            [
+                b"core-pulse-epoch-seed",
+                recovered_seed,
+                local_csprng_seed,
+                local_observed_entropy,
+                supplemental_entropy,
+                context_sample.digest_hex.encode("utf-8"),
+                payload_sha256.encode("utf-8"),
+            ]
+        )
+        epoch_seed = self._hkdf_sha256(
+            ikm=epoch_seed_input,
+            salt=hashlib.sha256(b"epoch-seed-salt|" + self._machine_salt).digest(),
+            info=b"core-pulse-layer1-epoch-seed",
+            length=32,
+        )
+        journal_request_hash = hashlib.sha256(
+            stable_json_bytes(
+                {
+                    "payload_sha256": payload_sha256,
+                    "context_digest": context_sample.digest_hex,
+                    "supplemental_sources": [sample.provider for sample in supplemental_samples],
+                    "fallback_reason": fallback_reason,
+                }
+            )
+        ).hexdigest()
+        journal_entry = self._journal.append_seed(epoch_seed, request_hash=journal_request_hash)
+        entropy_sources = [
+            {
+                "provider": LOCAL_CSPRNG_PROVIDER,
+                "kind": "entropy",
+                "timestamp": iso_utc(),
+                "bytes_used": len(local_csprng_seed),
+                "quality": "local-primary",
+                "request_hash": hashlib.sha256(local_csprng_seed).hexdigest(),
+                "response_digest": hashlib.sha256(local_observed_entropy).hexdigest(),
+                "latency_ms": 0,
+                "status": "ok",
+                "error_code": "",
+                "fallback_reason": "",
+            },
+            context_record,
+            *supplemental_records,
+            {
+                "provider": "entropy_wal_journal",
+                "kind": "journal",
+                "timestamp": journal_entry.timestamp,
+                "bytes_used": len(epoch_seed),
+                "quality": "committed",
+                "request_hash": journal_request_hash,
+                "response_digest": journal_entry.entry_hash,
+                "latency_ms": 0,
+                "status": "ok",
+                "error_code": "",
+                "fallback_reason": "",
+                "sequence": journal_entry.sequence,
+                "merkle_root": journal_entry.merkle_root,
+            },
+        ]
 
         # Policy rule: local CSPRNG remains mandatory; remote providers are additive/contextual.
         local_entropy_input = b"|".join(
             [
                 b"core-pulse-local",
-                local_csprng_seed,
+                epoch_seed,
                 local_observed_entropy,
                 supplemental_entropy,
             ]
@@ -136,7 +219,9 @@ class EntropyEngine:
                 context_bytes,
             ]
         )
-        salt = hashlib.sha256(b"salt|" + self._machine_salt + payload_bytes).digest()
+        salt = hashlib.sha256(
+            b"salt|" + self._machine_salt + payload_bytes + journal_entry.entry_hash.encode("utf-8")
+        ).digest()
         context_digest = hashlib.sha256(context_material).digest()
 
         key_bytes = self._hkdf_sha256(
@@ -174,13 +259,21 @@ class EntropyEngine:
             "entropy_quality_tier": entropy_quality_tier,
             "entropy_sources": entropy_sources,
             "fallback_reason": fallback_reason,
+            "entropy_journal_path": str(self._journal.journal_path.resolve()),
+            "entropy_journal_sequence": journal_entry.sequence,
+            "entropy_journal_entry_hash": journal_entry.entry_hash,
+            "entropy_journal_merkle_root": journal_entry.merkle_root,
+            "entropy_journal_recovered_entries": self._journal.state.recovered_entries,
+            "entropy_journal_tail_truncated": self._journal.state.tail_truncated,
         }
 
         LOGGER.info(
-            "entropy material built tier=%s supplemental=%s fallback=%s",
+            "entropy material built tier=%s supplemental=%s fallback=%s journal_seq=%s root=%s",
             entropy_quality_tier,
             len(supplemental_samples),
             fallback_reason or "none",
+            journal_entry.sequence,
+            journal_entry.merkle_root[:16],
         )
 
         return EntropyMaterial(
@@ -197,6 +290,11 @@ class EntropyEngine:
             entropy_sources=entropy_sources,
             fallback_reason=fallback_reason,
             supplemental_entropy_count=len(supplemental_samples),
+            journal_sequence=journal_entry.sequence,
+            journal_entry_hash=journal_entry.entry_hash,
+            journal_merkle_root=journal_entry.merkle_root,
+            journal_recovered_entries=self._journal.state.recovered_entries,
+            journal_tail_truncated=self._journal.state.tail_truncated,
             evidence=evidence,
         )
 

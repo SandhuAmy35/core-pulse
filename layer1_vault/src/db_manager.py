@@ -82,6 +82,9 @@ class VaultDatabase:
                 key_fingerprint TEXT NOT NULL,
                 entropy_digest TEXT NOT NULL,
                 entropy_quality TEXT NOT NULL,
+                entropy_journal_seq INTEGER NOT NULL DEFAULT 0,
+                entropy_journal_entry_hash TEXT NOT NULL DEFAULT '',
+                entropy_journal_root TEXT NOT NULL DEFAULT '',
                 payload_sha256 TEXT NOT NULL,
                 integrity_proof TEXT NOT NULL DEFAULT '',
                 proof_payload_json TEXT NOT NULL DEFAULT '',
@@ -107,6 +110,9 @@ class VaultDatabase:
         self._ensure_column("encrypted_telemetry", "avg_burnout_risk", "REAL NOT NULL DEFAULT 0")
         self._ensure_column("encrypted_telemetry", "integrity_proof", "TEXT NOT NULL DEFAULT ''")
         self._ensure_column("encrypted_telemetry", "proof_payload_json", "TEXT NOT NULL DEFAULT ''")
+        self._ensure_column("encrypted_telemetry", "entropy_journal_seq", "INTEGER NOT NULL DEFAULT 0")
+        self._ensure_column("encrypted_telemetry", "entropy_journal_entry_hash", "TEXT NOT NULL DEFAULT ''")
+        self._ensure_column("encrypted_telemetry", "entropy_journal_root", "TEXT NOT NULL DEFAULT ''")
         self.connection.commit()
 
     def upsert_space_weather_snapshot(self, snapshot: SpaceWeatherSnapshot) -> int:
@@ -184,6 +190,9 @@ class VaultDatabase:
                 key_fingerprint,
                 entropy_digest,
                 entropy_quality,
+                entropy_journal_seq,
+                entropy_journal_entry_hash,
+                entropy_journal_root,
                 payload_sha256,
                 integrity_proof,
                 proof_payload_json,
@@ -191,7 +200,7 @@ class VaultDatabase:
                 nonce,
                 ciphertext,
                 space_weather_sample_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 entropy.created_at,
@@ -207,6 +216,9 @@ class VaultDatabase:
                 encrypted.key_fingerprint,
                 encrypted.entropy_digest,
                 entropy.entropy_quality_tier,
+                entropy.journal_sequence,
+                entropy.journal_entry_hash,
+                entropy.journal_merkle_root,
                 encrypted.plaintext_sha256,
                 proof.integrity_proof,
                 proof.proof_payload_json,
@@ -233,6 +245,9 @@ class VaultDatabase:
                 avg_burnout_risk,
                 key_fingerprint,
                 entropy_digest,
+                entropy_quality,
+                entropy_journal_seq,
+                entropy_journal_root,
                 integrity_proof
             FROM encrypted_telemetry
             ORDER BY id DESC
@@ -276,6 +291,9 @@ class VaultDatabase:
                 telemetry.key_fingerprint,
                 telemetry.entropy_digest,
                 telemetry.entropy_quality,
+                telemetry.entropy_journal_seq,
+                telemetry.entropy_journal_entry_hash,
+                telemetry.entropy_journal_root,
                 telemetry.payload_sha256,
                 telemetry.integrity_proof,
                 telemetry.proof_payload_json,
@@ -323,6 +341,7 @@ class VaultDatabase:
                 COALESCE(AVG(employee_count), 0) AS average_employee_count,
                 COALESCE(AVG(avg_focus_score), 0) AS average_focus_score,
                 COALESCE(AVG(avg_burnout_risk), 0) AS average_burnout_risk,
+                COALESCE(MAX(entropy_journal_seq), 0) AS latest_entropy_journal_seq,
                 COUNT(DISTINCT integrity_proof) AS proof_count
             FROM encrypted_telemetry
             """
