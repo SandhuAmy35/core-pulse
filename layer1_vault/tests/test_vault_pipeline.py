@@ -8,7 +8,7 @@ from layer1_vault.src.crypto_aes import decrypt_payload, encrypt_payload
 from layer1_vault.src.db_manager import VaultDatabase
 from layer1_vault.src.nasa_client import SpaceWeatherSnapshot
 from layer1_vault.src.payload_validator import TelemetryValidationError, validate_telemetry_payload
-from layer1_vault.src.proof_engine import build_vault_proof
+from layer1_vault.src.proof_engine import build_vault_proof, verify_integrity_proof
 from layer1_vault.src.trng_engine import EntropyEngine
 from layer1_vault.src.vault_report import build_report
 
@@ -75,6 +75,8 @@ class VaultPipelineTests(unittest.TestCase):
         self.assertEqual(recovered["sequence"], payload["sequence"])
         self.assertEqual(recovered["sensor_id"], payload["sensor_id"])
         self.assertEqual(len(proof.integrity_proof), 64)
+        self.assertTrue(verify_integrity_proof(proof.proof_payload_json, proof.integrity_proof))
+        self.assertFalse(verify_integrity_proof(proof.proof_payload_json, "0" * 64))
 
     def test_database_persistence(self) -> None:
         payload = {
@@ -131,9 +133,12 @@ class VaultPipelineTests(unittest.TestCase):
             self.assertEqual(rows[0]["employee_count"], 1)
             proofs = db.fetch_recent_proofs(limit=1)
             self.assertEqual(proofs[0]["integrity_proof"], proof.integrity_proof)
-            report = build_report(str(db_path), recent_limit=2)
+            report = build_report(str(db_path), recent_limit=2, verify_integrity=True)
             self.assertEqual(report["summary"]["encrypted_record_count"], 1)
             self.assertEqual(len(report["recent_records"]), 1)
+            self.assertEqual(report["integrity_audit"]["records_checked"], 1)
+            self.assertEqual(report["integrity_audit"]["failed_count"], 0)
+            self.assertTrue(report["recent_audits"][0]["passed"])
             db.close()
 
 
