@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/posiedon/Desktop/Coding/Hack-NMIMS-CHD/core-pulse/layer3_governor/build/cmake_install.cmake",
+		"/home/posiedon/Desktop/Coding/Hack-NMIMS-CHD/core-pulse/layer3_governor/build/_deps/ftxui-build/cmake_install.cmake",
+		"/home/posiedon/Desktop/Coding/Hack-NMIMS-CHD/core-pulse/layer3_governor/build/_deps/ftxui-build/examples/cmake_install.cmake",
+		"/home/posiedon/Desktop/Coding/Hack-NMIMS-CHD/core-pulse/layer3_governor/build/_deps/ftxui-build/doc/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

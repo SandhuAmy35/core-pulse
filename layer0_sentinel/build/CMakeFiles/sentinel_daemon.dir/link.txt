@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/sentinel_daemon.dir/link.d CMakeFiles/sentinel_daemon.dir/src/loader.cpp.o -o sentinel_daemon  -lbpf /usr/lib/libzmq.so.5.2.5 -lelf -lz /usr/lib/libgnutls.so /usr/lib/libsodium.so -lrt -lpgm -lm
