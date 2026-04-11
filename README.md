@@ -6,58 +6,160 @@ CORE-PULSE is a multi-layer hackathon prototype for privacy-aware employee produ
 2. Stand up the communication pipe before deep domain logic.
 3. Let each layer swap the mock implementation for the real one without breaking contracts.
 
-## Active integration path
+4. Repository Structure
+core-pulse/
+│
+├── layer0_sentinel/
+│   └── README.md
+│
+├── layer1_vault/
+│   ├── src/
+│   ├── ui_sim/
+│   ├── requirements.txt
+│   └── README.md
+│
+├── layer2_neural/
+│   └── README.md
+│
+├── layer3_governor/
+│   └── README.md
+│
+├── layer4_surface/
+│   └── README.md
+│
+├── shared_contracts/
+│   └── README.md
+│
+├── .gitignore
+├── requirements.txt
+└── README.md
 
-- `layer0_sentinel/mock_publisher.py` publishes realistic mock telemetry over ZeroMQ.
-- `layer2_neural/src/zmq_broadcaster.py` consumes the ZeroMQ stream, computes dashboard-ready aggregates, and exposes them over WebSockets.
-- `layer4_surface/synergy-dashboard` renders the live stream in a polished Next.js dashboard.
+Layered Architecture Overview
+🟢 Layer 0 — Sentinel
+Purpose:
+System boundary enforcement and validation.
+Responsibilities:
 
-## Shared contracts
+Entry‑point validation
+Trust checks and guardrails
+Early rejection of invalid states
+Protective abstractions before state mutation
 
-- ZeroMQ topic contract: [shared_contracts/zmq_topics.json](shared_contracts/zmq_topics.json)
-- Payload schemas: [shared_contracts/payload_schemas.json](shared_contracts/payload_schemas.json)
+Key Principle:
 
-## Layer 1 space-weather source
+Nothing unsafe moves deeper into the system.
 
-The intended real-time cosmic entropy source for the later `layer1_vault` implementation is:
 
-- Primary X-ray flux feed: `https://services.swpc.noaa.gov/json/goes/primary/xrays-1-day.json`
-- NASA flare enrichment feed: `https://kauai.ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`
+🔐 Layer 1 — Vault
+Purpose:
+Secure state management and persistence.
+Responsibilities:
 
-The SWPC feed gives the actual GOES X-ray flux values. The NASA DONKI endpoint supplies flare metadata for entropy enrichment and auditability.
+Data storage and retrieval
+Secrets, credentials, and protected configuration
+Controlled access to persistent state
+Simulated interfaces (ui_sim) for testing
 
-## Quick start
+Contents:
 
-### 1. Install the Python bridge dependencies
+src/ – core vault logic
+ui_sim/ – simulated interfaces / testing tools
+requirements.txt – vault‑specific dependencies
 
-```powershell
-python -m pip install -r layer2_neural/requirements.txt
-```
+Key Principle:
 
-### 2. Start the mock Layer 0 publisher
+State is valuable and must be protected.
 
-```powershell
-python layer0_sentinel/mock_publisher.py --interval 0.8
-```
 
-### 3. Start the ZeroMQ -> WebSocket bridge
+🧠 Layer 2 — Neural
+Purpose:
+Decision‑making, intelligence, and computation.
+Responsibilities:
 
-```powershell
-python layer2_neural/src/core_loop.py --websocket-port 8765
-```
+Reasoning pipelines
+AI / ML logic
+Signal interpretation
+Adaptive behavior modeling
 
-### 4. Install and run the dashboard
+Key Principle:
 
-```powershell
-cd layer4_surface
-npm install
-npm run dev:dashboard
-```
+Thinking happens here, not acting.
 
-The dashboard will be available at `http://localhost:3000`, and it listens to the bridge at `ws://127.0.0.1:8765`.
 
-## Why this layout works
+⚖️ Layer 3 — Governor
+Purpose:
+Policy enforcement and orchestration.
+Responsibilities:
 
-- The communication contract is explicit before anyone writes heavy logic.
-- The Linux-only C++ layers stay decoupled from the Python and Next.js workstreams.
-- Layer 1 crypto, Layer 2 graph orchestration, and Layer 4 UX can all advance without breaking the integration surface.
+Rule evaluation
+Permission and constraint enforcement
+Flow control between layers
+System‑wide governance logic
+
+Key Principle:
+
+Not everything that can happen is allowed to happen.
+
+
+🌐 Layer 4 — Surface
+Purpose:
+External interaction layer.
+Responsibilities:
+
+APIs
+User interfaces
+External adapters
+Integration points
+
+Key Principle:
+
+This is the only layer the outside world should see.
+
+
+🔗 Shared Contracts
+shared_contracts/
+Purpose:
+Define stable interfaces between layers.
+Responsibilities:
+
+Data schemas
+Interface definitions
+Message formats
+Cross‑layer guarantees
+
+Rule:
+Layers must depend on contracts, not implementations.
+
+Dependency Rules
+
+Higher layers may depend on lower layers
+Lower layers must never depend on higher layers
+Cross‑layer communication happens only via shared contracts
+UI and infrastructure remain isolated from core logic
+
+
+Installation (Global)
+Shellpip install -r requirements.txtShow more lines
+
+Individual layers may also define their own dependencies.
+
+
+Project Status
+
+✅ Architecture scaffolded
+✅ Layer boundaries defined
+🚧 Core logic under active development
+🚧 Documentation evolving
+
+
+Contributing
+Until contribution guidelines are finalized:
+
+Respect layer boundaries
+Do not bypass shared contracts
+Keep intelligence (Layer 2) free of I/O
+Keep state (Layer 1) free of policy
+
+
+Vision
+CORE‑PULSE is designed to scale from experimentation → governed intelligence → production systems without architectural rewrites.
