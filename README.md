@@ -1,12 +1,82 @@
-🧠 CORE-PULSE: OMNI-LAYER SURVEILLANCE & INTERVENTION"If you can't measure the soul of the machine, you can't govern the burnout of the man."CORE-PULSE is a zero-knowledge, multi-agent cognitive architecture designed to monitor, secure, and govern human-machine synergy. It bridges the gap between raw Linux kernel tracepoints and high-level psychological profiling using local, uncensored LLMs.🏗️ THE ARCHITECTURE (THE 4-LAYER STACK)The system is architected across four distinct layers of abstraction to ensure maximum security and semantic depth:🔴 LAYER 0: THE HARDWARE SENTINELTechnology: C++, eBPF, Linux Kernel Tracepoints.Function: Hooks directly into the kernel to monitor syscall entropy and context switching.Impact: Detects "System Thrashing"—the physical manifestation of user multitasking and cognitive load.🟠 LAYER 1: THE CRYPTOGRAPHIC VAULTTechnology: Python, AES-256-GCM, SQLite, TRNG Entropy.Function: Ingests raw telemetry and locks it behind an authenticated encryption wall.Security: Implements a strict zero-knowledge protocol where the "Brain" only sees decrypted data in volatile memory.🔵 LAYER 2: THE NEURAL CORETechnology: Python, LangGraph, Ollama (Llama-3/Dolphin), Pydantic.Function: A multi-agent graph that performs parallel psychological profiling.Sentiment Agent: Analyzes emotional valence and stress levels from intercepted logs.Synergy Agent: Measures organizational friction and communication toxicity.🟢 LAYER 3: THE GOVERNORTechnology: C++20, FTXUI, ZeroMQ, Hyprland IPC.Function: The command center TUI dashboard and enforcement engine.Intervention: When the burnout threshold is breached, the Governor executes a system-wide lockout—dimming the environment and throttling network traffic to force a "cool-down" period.🧬 THE MATHEMATICS OF BURNOUTCORE-PULSE uses a dynamic weight-based algorithm within its MathEngine node to calculate the Burnout Probability ($B_p$) in real-time:$$raw\_bp = \frac{E \times M}{S + 0.1}$$$$B_p = \min\left(\frac{raw\_bp}{150.0}, 1.0\right)$$Where:$E$: Entropy Score (derived from context switching/thrashing).$M$: Meeting/Activity Density.$S$: Sentiment Score ($0.0$ = Hostile/Burned Out, $1.0$ = Calm/Productive).The system identifies a CRITICAL status when $B_p \ge 0.85$.🛠️ TECH STACKComponentTechnologyLanguageC++20, Python 3.12 AI OrchestrationLangGraph, LangChain Local InferenceOllama (Dolphin-Llama3) CryptoAES-256-GCM (Authenticated Encryption) Kernel HookseBPF (Extended Berkeley Packet Filter) TUI FrameworkFTXUI (Functional Terminal User Interface) MessagingZeroMQ (Pub/Sub Pattern) EnforcementHyprland IPC / Linux Traffic Control (tc)🚀 INSTALLATION & DEPLOYMENT1. The Kernel SentinelBashcd layer0_sentinel/build
+# 🛡️ Core-Pulse
+**Zero-Knowledge Cognitive Architecture & Intervention Pipeline**
+
+[![C++20](https://img.shields.io/badge/C++-20-blue.svg)](https://isocpp.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-Agentic_AI-orange.svg)](https://python.langchain.com/)
+[![eBPF](https://img.shields.io/badge/eBPF-Kernel_Tracepoints-black.svg)](https://ebpf.io/)
+[![Ollama](https://img.shields.io/badge/Ollama-Local_Inference-white.svg)](https://ollama.ai/)
+[![ZeroMQ](https://img.shields.io/badge/ZeroMQ-IPC_Stream-red.svg)](https://zeromq.org/)
+
+Core-Pulse is a distributed, zero-knowledge cognitive architecture. It bridges bare-metal Linux kernel tracepoints, local LLaMA-3 psychological profiling, and real-time Hyprland window manager interventions to isolate and neutralize developer burnout at the hardware level.
+
+---
+
+## 🧠 System Architecture
+
+Unlike traditional monolithic productivity trackers, Core-Pulse decouples kernel ingestion, cryptographic storage, AI inference, and UI enforcement across a hyper-fast ZeroMQ IPC bridge:
+
+1. **Bare-Metal Sentinel Core (C++20 & eBPF):** Bypasses high-level OS abstractions to track raw syscall entropy and context-switching metrics, establishing a baseline for hardware-level system thrashing.
+2. **Cryptographic Vault (Python & AES-256-GCM):** Secures all kernel telemetry and OCR intercepts in a zero-knowledge SQLite vault, decrypted strictly in volatile memory for AI analysis.
+3. **Neural Core & LangGraph Brain (Python & LLaMA-3):** A multi-agent graph running locally via Ollama. It dynamically calculates a "Burnout Probability" by fusing hardware entropy with semantic sentiment analysis of intercepted on-screen text.
+4. **Governor TUI & Hyprland Enforcer (C++20 & FTXUI):** Dual enforcement. A terminal dashboard visualizes real-time cognitive metrics via an ASCII matrix, while the daemon physically throttles network traffic (via `tc`) and dims the Hyprland environment when critical burnout thresholds are breached.
+
+---
+
+## ⚙️ Prerequisites
+
+To run this pipeline natively, your machine requires:
+* **C++ Build Tools:** `g++`, `cmake`, `make`
+* **Libraries:** `libzmq3-dev` (ZeroMQ), `libssl-dev` (OpenSSL)
+* **Python:** 3.12+ with `pip`
+* **Environment:** Linux running the Hyprland Wayland compositor.
+* *(Required)* **Ollama** installed with the `dolphin-llama3:latest` model pulled locally.
+
+---
+
+## 🚀 Manual Launch Sequence
+
+To run the architecture natively, you must spin up the components individually in separate terminal sessions to establish the data flow and IPC bridges.
+
+### Step 1: Install Python Dependencies
+```bash
+cd layer2_neural/src
+pip install langchain-ollama langgraph pydantic pyzmq
+```
+
+Step 2: Boot the Hardware Sentinel (Terminal 1)
+```bash
+cd layer0_sentinel/build
 cmake .. && make
 sudo ./sentinel_daemon
-2. The Neural BrainBash# Ensure Ollama is running your preferred model
-ollama run dolphin-llama3
+```
 
+Step 3: Launch the Cryptographic Vault (Terminal 2)
+```bash
+cd layer1_vault/src
+python main.py
+```
+
+Step 3: Launch the Cryptographic Vault (Terminal 2)
+```bash
+cd layer1_vault/src
+python main.py
+```
+
+Step 4: Boot the Hyprland Context Bridge (Terminal 3)
+```bash
+cd layer3_governor/scripts
+python layer1_context.py
+```
+
+Step 5: Fire the Neural Core (Terminal 4)
+```bash
 cd layer2_neural/src
 python core_loop.py
-3. The Governor TUIBashcd layer3_governor/build
+```
+
+Step 6: Launch the Matrix Governor TUI (Terminal 5)
+```bash
+cd layer3_governor/build
 cmake .. && make
 ./tui_matrix
-📸 SYSTEM PREVIEWThe Command Center displays a live rolling trajectory of your neural state, intercepted semantic packets, and active threat vectors (blacklisted applications).Built for the NMIMS Innovathon 2026.
+```
