@@ -2,6 +2,7 @@
 
 import { useDeferredValue } from "react";
 
+import { NeuralSynergyCloud } from "../components/NeuralSynergyCloud";
 import { useWebsocket } from "../hooks/useWebsocket";
 
 type WeatherCard = {
@@ -139,7 +140,7 @@ export default function Page() {
   return (
     <main className="surface-shell">
       <header className="surface-header panel-frame">
-        <div className="brand-wrap">
+        <div className="brand-wrap"> 
           <h1 className="brand-title">
             <span className="brand-mark">+</span>
             CORE-PULSE <span className="brand-slash">//</span> SURFACE
@@ -184,7 +185,7 @@ export default function Page() {
           </div>
           <p className="cloud-title">NEURAL SYNERGY CLOUD</p>
           <div className="cloud-field">
-            <span className="cloud-core">{signalState === "ACTIVE" ? "BREATHING SYNC" : "AWAITING SYNC"}</span>
+            <NeuralSynergyCloud signalState={signalState} />
           </div>
           <div className="cloud-legend">
             <div>
