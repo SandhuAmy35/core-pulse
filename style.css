@@ -1,0 +1,97 @@
+:root {
+    --bg-void: #030508;
+    --neon-cyan: #00ffff;
+    --neon-cyan-dim: rgba(0, 255, 255, 0.2);
+    --neon-purple: #bc13fe;
+    --neon-yellow: #f3ec19;
+    --neon-red: #ff003c;
+    --panel-bg: rgba(3, 5, 8, 0.65);
+}
+
+* { box-sizing: border-box; }
+
+body, html {
+    margin: 0; padding: 0;
+    height: 100vh; width: 100vw;
+    background-color: var(--bg-void);
+    color: var(--neon-cyan);
+    font-family: 'Courier New', Courier, monospace;
+    overflow: hidden;
+}
+
+#starfield {
+    position: absolute; top: 0; left: 0; z-index: 0;
+}
+
+/* --- GRID LAYOUT --- */
+.dashboard-grid {
+    position: relative; z-index: 10;
+    display: grid;
+    grid-template-columns: 350px 1fr 350px;
+    grid-template-rows: 80px 1fr;
+    height: 100vh;
+    padding: 20px;
+    gap: 20px;
+}
+
+.hud-header {
+    grid-column: 1 / -1;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--neon-cyan-dim);
+    padding-bottom: 10px;
+}
+
+.hud-header h1 { margin: 0; font-size: 24px; letter-spacing: 2px; text-shadow: 0 0 10px var(--neon-cyan); }
+.hud-header p { margin: 5px 0 0 0; font-size: 12px; color: #008b8b; }
+.text-cyan { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
+.text-yellow { color: var(--neon-yellow); text-shadow: 0 0 8px var(--neon-yellow); }
+.text-red { color: var(--neon-red); text-shadow: 0 0 8px var(--neon-red); }
+
+/* --- PANELS & WIDGETS --- */
+.panel { display: flex; flex-direction: column; gap: 20px; }
+
+.widget {
+    background: var(--panel-bg);
+    border: 1px solid var(--neon-cyan-dim);
+    backdrop-filter: blur(12px);
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.widget h3 { margin: 0 0 15px 0; font-size: 14px; letter-spacing: 1px; border-bottom: 1px dashed var(--neon-cyan-dim); padding-bottom: 5px; }
+
+/* Charts & Data */
+.chart-container { height: 150px; width: 100%; }
+.histogram-container { display: flex; align-items: flex-end; gap: 4px; height: 100px; }
+.hist-bar { flex: 1; background-color: var(--neon-purple); box-shadow: 0 0 8px var(--neon-purple); transition: height 0.3s ease; }
+
+/* Calendar */
+.calendar-blocks .block { padding: 10px; margin-bottom: 8px; border: 1px solid var(--neon-cyan-dim); font-size: 12px; opacity: 0.5; }
+.calendar-blocks .block.active { opacity: 1; border-color: currentColor; box-shadow: inset 0 0 10px rgba(255,255,255,0.1); }
+
+/* Flow Lock Switch */
+.flow-lock .desc { font-size: 11px; color: #008b8b; margin-bottom: 15px; }
+.cyber-switch { position: relative; display: inline-block; width: 60px; height: 30px; }
+.cyber-switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: transparent; border: 2px solid var(--neon-cyan); transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: var(--neon-cyan); transition: .4s; box-shadow: 0 0 10px var(--neon-cyan); }
+input:checked + .slider { border-color: var(--neon-purple); }
+input:checked + .slider:before { transform: translateX(30px); background-color: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
+.lock-status { margin-top: 10px; font-weight: bold; font-size: 14px; }
+
+/* --- CENTER CORE (The Screenshot Aesthetic) --- */
+.center-stage { display: flex; justify-content: center; align-items: center; }
+.core-container { position: relative; width: 320px; height: 320px; display: flex; justify-content: center; align-items: center; }
+
+.ring {
+    position: absolute; width: 100%; height: 100%;
+    border-radius: 50%; border: 12px solid var(--neon-cyan);
+    box-shadow: 0 0 40px var(--neon-cyan), inset 0 0 40px var(--neon-cyan);
+    z-index: 4; transition: all 0.5s ease;
+}
+
+#particle-core { position: absolute; width: 296px; height: 296px; border-radius: 50%; z-index: 3; }
+
+.eyes { position: absolute; z-index: 5; display: flex; gap: 50px; transition: all 0.3s ease; }
+.eye { width: 45px; height: 8px; background-color: var(--neon-cyan); border-radius: 4px; box-shadow: 0 0 20px var(--neon-cyan); transition: all 0.3s ease; }

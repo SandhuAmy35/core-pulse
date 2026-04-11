@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTINEL-CORE // Analytics</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="starfield"></canvas>
+    
+    <div class="dashboard-grid">
+        <header class="hud-header">
+            <div class="brand">
+                <h1>SENTINEL-CORE // <span id="system-status" class="text-cyan">ACTIVE</span></h1>
+                <p>BIOMETRIC & COGNITIVE TELEMETRY</p>
+            </div>
+            <div class="burnout-meter">
+                <span class="label">B_p THRESHOLD:</span>
+                <span id="bp-value" class="text-cyan">0.24 (ZEN)</span>
+            </div>
+        </header>
+
+        <aside class="panel left-panel">
+            <div class="widget">
+                <h3>JITTER_VECTOR_ANALYSIS</h3>
+                <div class="chart-container">
+                    <canvas id="jitterChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="widget">
+                <h3>CONTEXT_SWITCH_FREQ</h3>
+                <div class="histogram-container" id="histogram">
+                    </div>
+            </div>
+        </aside>
+
+        <main class="center-stage">
+            <div class="core-container">
+                <canvas id="particle-core"></canvas>
+                <div class="ring" id="aegis-ring"></div>
+                <div class="eyes" id="aegis-eyes">
+                    <div class="eye"></div>
+                    <div class="eye"></div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="panel right-panel">
+            <div class="widget flow-lock">
+                <h3>FLOW_LOCK_PROTOCOL</h3>
+                <p class="desc">Isolate environment & throttle distractions.</p>
+                <label class="cyber-switch">
+                    <input type="checkbox" id="flow-toggle">
+                    <span class="slider"></span>
+                </label>
+                <div class="lock-status" id="lock-label">STANDBY</div>
+            </div>
+
+            <div class="widget">
+                <h3>MEETING_DENSITY</h3>
+                <div class="calendar-blocks">
+                    <div class="block active">09:00 - SYNC</div>
+                    <div class="block active text-red">11:00 - CLIENT</div>
+                    <div class="block">14:00 - OPEN</div>
+                    <div class="block active text-yellow">16:00 - REVIEW</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
